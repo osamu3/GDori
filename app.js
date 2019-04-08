@@ -36,12 +36,13 @@ app.use(express.static(path.join(__dirname, 'public')));   //←でパス文字�
 app.set('view engin', 'ejs');
 
 app.get("/", function (req, res, next) { //"/"へのアクセスで、
-	res.render("index.ejs", {title  : "ここはルート",content : "views/index.ejsを表示しています。"});
-});
-
-app.get("/gdori", function (req, res, next) { //gdoriへのアクセスで、
+	//res.render("index.ejs", {title  : "ここはルート",content : "views/index.ejsを表示しています。"});
 	res.render("gdori.ejs", {title  : "ここは自鳥",content : "views/gdori.ejsを表示しています。"});
 });
+
+//app.get("/gdori", function (req, res, next) { //gdoriへのアクセスで、
+//	res.render("gdori.ejs", {title  : "ここは自鳥",content : "views/gdori.ejsを表示しています。"});
+//});
 
 server.listen(PORT,() => console.log('app listening on port '+ PORT));
 
