@@ -19,7 +19,7 @@ const path = require('path');
 const favicon = require('serve-favicon');
 
 const PORT = 8080;
-let userId = '';
+let  browserId = '';
 let piId = '';
 const cnctReqByCameraStr = 'Kamera_Karano_SetuzokukyokaIrai';
 
@@ -79,15 +79,15 @@ io.on('connection', function (socket) {
 	});
 
 	//ブラウザからの着信:[msg]は、'takeAPic''openTheDoor''ContinueToProcess?'の３種類のはず
-	socket.on('B->S', (msg, browserSideFnc) => {
+	socket.on('B=>S', (msg, browserSideFnc) => {
 		console.log('(app.js:L83)：B→S :[' + msg + ']←');
 		if (msg === 'ContinueToProcess?') {//ブラウザからの処理継続要求、(※注！ラズパイは別)
-			if (userId != '') { //既に接続が完了している場合、新たな接続は受け付けない
+			if ( browserId != '') { //既に接続が完了している場合、新たな接続は受け付けない
 				console.log('    Already Connected! 接続不許可、切断します。');
 				browserSideFnc('ContinueNG');//ブラウザ側のファンクションの呼び出し
 				io.sockets.connected[socket.id].disconnect();//切断
 			} else {
-				userId = socket.id;//たった今接続してきたユーザのsocketIdをとる。
+				 browserId = socket.id;//たった今接続してきたユーザのsocketIdをとる。
 				//接続を継続し、写真を撮るを準備せよ。をブロードキャストする。
 				console.log('(app.js:L92)：      RES: [ContinueOK]→');
 				browserSideFnc('ContinueOK');//ブラウザ側のファンクションの呼び出し
@@ -95,36 +95,36 @@ io.on('connection', function (socket) {
 		}
 	});
 
-	socket.on('b->S->p', (msg)=>{
+	socket.on('B=>S->p', (msg)=>{//ブラウザ＝＞サーバへの要求『ドアを開けて』
 		if (msg === 'OpenTheDoor') {//ブラウザからの写真撮影準備要求
-			console.log('(app.js:L98)：b→S→p: [OpenTheDoor]←→');
-			console.log('(app.js:L102)：b→s→P: [OpenTheDoor]→');
-			//io.to(piId).emit('B->S->P', msg, (resp) => {　io.*.emit は、コールバック関数をサポートしていない。
+			console.log('(app.js:L100)：B→S→p: [OpenTheDoor]←');
 			if (piId !== '') { //パイがログインしていたら
-				io.to(piId).emit('b->s->P', msg); //メッセージの転送なので着信確認用のコールバック関数は使えない。
-				console.log('::');
+                console.log('(app.js:L102)：b→S→P: [OpenTheDoor]→');
+	    		//io.to(piId).emit('B->S->P', msg, (resp) => {　io.*.emit は、コールバック関数をサポートしていない。
+				io.to(piId).emit('b->S=>P', msg); //メッセージの転送なので着信確認用のコールバック関数は使えない。
+				console.log('');
 			}
 		}
 		if (msg === 'TakeAPic') {//ブラウザから写真撮影依頼
-			console.log('(server.js:L107)：    ←BroadCast(Sv2Pi【TakeAPic】:Pi←Server)');
-			//io.emit('Sv2Pi', msg);//[takeAPic]をブロードキャスト送信
-			io.to(piId).emit('B->S->P', msg);//[takeAPic]をパイへ送信
+			console.log('(app.js:L109)：B→S→P:[TakeAPic】←→');
+			io.to(piId).emit('b->S=>P', msg);//[takeAPic]をパイへ送信
 			//コマンド送信後5秒後、リセット送信。←本番は15秒？
 			setTimeout(function () {
-				console.log('(server.js:L112)←BroadCast(Sv2All【Reset】):Pi←Server');
-				io.emit('Sv2All', 'Reset');
+				console.log('(app.js:L113)：*｜S→All:[Reset]→');
+				io.emit('S->All', 'Reset');
 				console.log('');
 			}, 15000);
 		}
 	});
 
-	socket.on('p->S->b', (msg) => {
-		if (msg == 'TheDoorOpened') {
-			console.log('きたーーーーーーーーー');
+	socket.on('P=>S->b', (msg,piSideFnc) => {//パイ＝＞サーバーへのメッセージ『ドアが開きました』
+		console.log('(app.js:L121)：P→S→b:['+msg+']←');
+		if (msg == 'TheDoorWasOpened') {
+			console.log('(app.js:L123)：p→S→B:['+msg+']→');
+			io.to(browserId).emit('p->S=>B', msg);//[TheDoorWasOpened]をブラウザへ送信
+			piSideFnc('Server said "I heard that TheDoorWasOpened".');
 		}
 	});
-
-
 
 	//パイからの受信:[msg]は、パイ側でソケットコネクトイベントが発火した旨の通知のはず
 	socket.on('Pi2Sv', function (msg) {
@@ -141,10 +141,10 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on("disconnect", function () {
-		if (socket.id === userId) {
+		if (socket.id ===  browserId) {
 			console.log('[disconnect]イベントが発生(ブラウザー)');
-			userId = ''; //ブラウザからは、誰も接続していないことにする。
-			console.log('userIdを初期化\n');
+			 browserId = ''; //ブラウザからは、誰も接続していないことにする。
+			console.log(' browserIdを初期化\n');
 		} else {
 			if (socket.id === piId) {
 				console.log("[disconnect]イベントが発生(カメラ)");

@@ -28,7 +28,7 @@
 	</p>
 	<h1>ここに画像を表示します。　</h1>
 	<div>
-		<img width="200" src="/phot/phot.JPG" id="photId">
+		<img width="200" src="phot/phot.JPG" id="photId">
 	</div>
 
 	<script src="/socket.io/socket.io.js"></script>
@@ -57,35 +57,43 @@
 			console.log('connected:サーバー⇔ブラウザ間のソケットIOコネクション確立しました。');
 
 			//サーバーへ接続を継続しても良いかどうかを問い合わせる。
-			console.log('(gdoriejs:L60)：B→S【ContinueToProcess?】→');
+			console.log('(gdoriejs:L60)：B→S[ContinueToProcess?]→');
 			//socket.emit('hoge', {message: 'gege'}, function browserSideFnc(msg){//接続を継続しても良いかどうかを問い合わせる。
-			socket.emit('B->S', 'ContinueToProcess?', (ans) => {//接続継続OK? "ans"の値は、サーバー側でセットされる。
+			socket.emit('B=>S', 'ContinueToProcess?', (ans) => {//接続継続OK? "ans"の値は、サーバー側でセットされる。
 				//以下は、サーバー側で、ansに値がセットされてから呼び出される。
-				console.log('(gdoriejs:L64)：B←S 【Anser: ' + ans + '】←');
+				console.log('(gdoriejs:L64)：B←S [Anser: ' + ans + ']←');
 				if (ans == 'ContinueOK') {
 					$('#takeAPic')[0].value = "準備中";
-					console.log('(gdoriejs:L67)：b->S->p【OpenTheDoor】→');
-					socket.emit('b->S->p', 'OpenTheDoor' , (rsp) => {//rspの値は、サーバー側でセットされる。
-						console.log('その２(gdoriejs:L69)：B←S 【Anser: ' + rsp + '】←');
-						//ifれす＝ドアが開いたなら　シャッター
-						$('#takeAPic')[0].value = "シャッター";
-					});
+					console.log('(gdoriejs:L67)：B→S→p[OpenTheDoor]→');
+					socket.emit('B=>S->p', 'OpenTheDoor' );//メッセージを転送するため、コールバックは使えない。
+//						console.log('その２(gdoriejs:L69)：B←S 【Anser: ' + rsp + '】←');
+//						//ifれす＝ドアが開いたなら　シャッター
+//						$('#takeAPic')[0].value = "シャッター";
+//					});
+//				}
+//				if (ans == 'ContinueNG') {
+//					console.log('その２(gdoriejs:L74)：B←S 【Anser: ' + ans + '】←');
 				}
-				if (ans == 'ContinueNG') {
-					console.log('その２(gdoriejs:L74)：B←S 【Anser: ' + ans + '】←');
-				}
-				console.log('');
 			});
 		});
 
 		//シャッター命令発令
 		function takeAPic() {
-			console.log('サーバーへメッセージ送信：socket.emit("Bs2Sv", "TakeAPic");');
-			socket.emit('Bs2Sv', 'takeAPic');
+			console.log('サーバーへメッセージ送信：socket.emit("B=>S->p", "TakeAPic");');
+			socket.emit('B=>S->p', 'TakeAPic');
 			$('#takeAPic')[0].disabled = true;
 			$('#takeAPic')[0].value = "準備中";
 		}
-
+		
+		//サーバーからのパイメッセージの転送があった。
+		socket.on('p->S=>B', function (msg) {
+			if(msg==='TheDoorWasOpened'){
+				console.log('(gdorijs:L91：' + 'シャッターボタン有効');
+				$('#takeAPic')[0].disabled = false;
+				$('#takeAPic')[0].value = "シャッター";
+			}
+		});
+		/*
 		socket.on('Sv2Bs', function (msg) {
 			console.log('サーバーからメッセージ着信：' + msg);
 			if (msg === 'ContinueOK') {
@@ -100,16 +108,21 @@
 				$('#takeAPic')[0].value = "写真を撮る";
 			}
 		});
-
+*/
 		//サーバーからラズパイ画像の転送があった。
 		socket.on('Sv2FtpPht', function (photUName) {
 			alert("[" + photUName + "]が送られてきました。リロードしましょう。");
-			$('#photId').src = "phot/" + photUName;
+			$('#photId').attr('src',"phot/" + photUName);
 			///////////ここ   .srappend($('<li>').text(msg));
 			//location.reload(true);//サーバーからリロード
 		});
 		socket.on("disconnect", function () {
-			console.log("[disconnect]イベントが発生:");
+			console.log("[disconnect]イベントが発生！");
+			console.log("切断しました。");
+			$('#takeAPic')[0].disabled = true;
+			$('#takeAPic')[0].value = "接続断しました。";
+			socket.disconnect();
+
 		});
 	</script>
 </body>
