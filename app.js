@@ -40,7 +40,7 @@ app.set('view engin', 'ejs');
 
 app.get("/", function (req, res, next) { //"/"へのアクセスで、
 	//res.render("index.ejs", {title  : "ここはルート",content : "views/index.ejsを表示しています。"});
-	res.render("gdori.ejs", { title: "ここは自鳥", content: "views/gdori.ejsを表示しています。" });
+	res.render("gdori.ejs", { title: "自撮り", content: "遠隔カメラでリモート撮影" });
 });
 
 //app.get("/gdori", function (req, res, next) { //gdoriへのアクセスで、
@@ -49,7 +49,7 @@ app.get("/", function (req, res, next) { //"/"へのアクセスで、
 
 server.listen(PORT, () => console.log('app listening on port ' + PORT));
 
-console.log('Now Ver 0.1. 1  : "ラズパイ接続手続き(ラズパイオンリー1台のみ)" ');
+console.log('Now Ver 0.２. 1  : "ラズパイ接続手続き(ラズパイオンリー1台のみ)" ');
 
 ////ソケットIO　関係
 io.on('connection', function (socket) {

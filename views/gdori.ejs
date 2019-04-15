@@ -17,18 +17,14 @@
 </head>
 
 <body>
-
-
 	<h1><%= title %></h1>
 	<p>『content = <%= content %>』</p>
-	<p>view engin is「ejs」(これは「views/gdori.ejs」です。) </p>
 
 	<p>
 		<input type="button" value="待機中" onclick="takeAPic()" id="takeAPic" disabled>
 	</p>
-	<h1>ここに画像を表示します。　</h1>
 	<div>
-		<img width="200" src="phot/phot.JPG" id="photId">
+		<img width="200" src="phot/1113.JPG" id="photId">
 	</div>
 
 	<script src="/socket.io/socket.io.js"></script>
@@ -80,6 +76,7 @@
 		//シャッター命令発令
 		function takeAPic() {
 			console.log('サーバーへメッセージ送信：socket.emit("B=>S->p", "TakeAPic");');
+			//$('#photId').attr('src',"phot/1113.JPG" );
 			socket.emit('B=>S->p', 'TakeAPic');
 			$('#takeAPic')[0].disabled = true;
 			$('#takeAPic')[0].value = "準備中";
